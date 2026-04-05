@@ -14,11 +14,5 @@ export const defaultViteConfig = {
   build: {
     outDir: "build",
     emptyOutDir: true,
-    rollupOptions: {
-      external: ["revine"],
-    },
-  },
-  optimizeDeps: {
-    exclude: ["revine"],
   },
 };
