@@ -2,7 +2,7 @@
   "name": "revine",
   "version": "0.9.1",
   "description": "A react framework, but better.",
-  "license": "ISC",
+  "license": "MIT",
   "author": "Rachit Bharadwaj",
   "type": "module",
   "main": "dist/index.js",

@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { createProject } from "./commands/createProject.js";
-import { spawn } from "child_process";
+import { readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createProject } from "./commands/createProject.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const pkgPath = path.resolve(__dirname, "../package.json");
+const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+
 const program = new Command();
 
-// Main command handler for direct project creation
 const handleProjectCreation = async (
   projectName: string,
   options: { force?: boolean },
@@ -18,44 +20,52 @@ const handleProjectCreation = async (
   await createProject(projectName, options);
 };
 
-// Helper to run vite with internal config
-const runViteCommand = (command: string) => {
-  // Path to the compiled vite.config.js in dist
+const runViteCommand = async (command: string) => {
   const configPath = path.resolve(__dirname, "runtime/bundler/vite.config.js");
 
-  const args = [command, "--config", configPath];
+  // Set the config path as env variable — vite reads VITE_CONFIG_FILE
+  process.env.VITE_CONFIG_PATH = configPath;
+
+  // Dynamically import vite's programmatic API
+  const vitePath = path.resolve(
+    process.cwd(),
+    "node_modules/vite/dist/node/index.js",
+  );
+  const vite = await import(vitePath);
+
+  // Load the revine config
+  const { generateRevineViteConfig } = await import(
+    path.resolve(__dirname, "runtime/bundler/generateConfig.js")
+  );
+  const config = await generateRevineViteConfig();
+
   if (command === "dev") {
-    // Vite dev doesn't need 'dev' argument, just calling vite is enough
-    args.shift();
-  }
-
-  spawn("npx", ["vite", ...args], {
-    stdio: "inherit",
-    shell: true,
-  });
-};
-
-// Main command handler for direct project creation with command check
-const handleRootAction = async (
-  projectName: string | undefined,
-  options: { force?: boolean },
-) => {
-  const knownCommands = ["create", "dev", "build", "preview"];
-  if (projectName && !knownCommands.includes(projectName)) {
-    await handleProjectCreation(projectName, options);
-  } else if (!projectName) {
-    program.help();
+    const server = await vite.createServer({
+      ...config,
+      configFile: false, // we pass config directly, no file needed
+    });
+    await server.listen();
+    server.printUrls();
+  } else if (command === "build") {
+    await vite.build({
+      ...config,
+      configFile: false,
+    });
+  } else if (command === "preview") {
+    const server = await vite.preview({
+      ...config,
+      configFile: false,
+    });
+    server.printUrls();
   }
 };
 
-// Root command
+// Root command — handles: npx revine <project-name>
 program
-  .version("0.8.0")
+  .version(pkg.version)
   .argument("[project-name/command]")
   .option("-f, --force", "Force creation in non-empty directory")
   .action(async (arg: string | undefined, options: { force?: boolean }) => {
-    // If it's a known command, Commander will handle it in the subcommand action.
-    // We only handle it here if it's NOT a known command.
     const knownCommands = ["create", "dev", "build", "preview"];
     if (arg && !knownCommands.includes(arg)) {
       await handleProjectCreation(arg, options);
@@ -64,7 +74,7 @@ program
     }
   });
 
-// Create subcommand (npx revine create my-app)
+// npx revine create <project-name>
 program
   .command("create")
   .argument("<project-name>")
@@ -89,3 +99,5 @@ program
   .action(() => runViteCommand("preview"));
 
 program.parse(process.argv);
+
+export { defineConfig } from "./runtime/defineConfig.js";

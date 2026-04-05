@@ -1,4 +1,6 @@
-export default {
+import { defineConfig } from "revine";
+
+export default defineConfig({
   vite: {
     server: {
       open: false,
@@ -10,4 +12,4 @@ export default {
       emptyOutDir: true,
     },
   },
-};
+});

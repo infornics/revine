@@ -22,40 +22,78 @@ export function revinePlugin(): any {
     // Because it's virtual (not inside node_modules), Vite processes
     // import.meta.glob and all imports normally in the project context.
     load(id: string) {
-      if (id === VIRTUAL_ROUTING_ID) {
-        return `
+  if (id === VIRTUAL_ROUTING_ID) {
+    return `
 import { createBrowserRouter } from "react-router-dom";
 import { lazy, Suspense, createElement } from "react";
 
-// Eagerly load NotFound from the project's src directory.
 const notFoundModules = import.meta.glob("/src/NotFound.tsx", { eager: true });
 const NotFoundComponent = Object.values(notFoundModules)[0]?.default;
 
-// Lazily load all page components under /src/pages.
 const pages = import.meta.glob("/src/pages/**/*.tsx");
 
-const routes = Object.entries(pages).map(([filePath, component]) => {
+// Static literal array — Vite requires this to be a static string, not dynamic
+const layoutModules = import.meta.glob("/src/pages/**/layout.tsx", { eager: true });
+
+// Debug — remove after confirming it works
+console.log("[revine] layoutModules found:", Object.keys(layoutModules));
+console.log("[revine] pages found:", Object.keys(pages));
+
+function getLayoutForPath(filePath) {
+  // Walk up directories looking for a layout.tsx
+  // e.g. /src/pages/about/index.tsx → check /src/pages/about/layout.tsx
+  //                                 → then /src/pages/layout.tsx
+  const parts = filePath.split("/");
+  
+  // Remove the filename, keep the directory parts
+  parts.pop();
+  
+  while (parts.length >= 2) {
+    const layoutKey = parts.join("/") + "/layout.tsx";
+    if (layoutModules[layoutKey]?.default) {
+      return layoutModules[layoutKey].default;
+    }
+    parts.pop();
+  }
+  return null;
+}
+
+function toRoutePath(filePath) {
   let cleaned = filePath.replace(/\\\\/g, "/");
   cleaned = cleaned.replace(/.*\\/pages\\//, "");
   cleaned = cleaned.replace(/\\.tsx$/i, "");
   cleaned = cleaned.replace(/\\/index$/, "");
+  cleaned = cleaned.replace(/\\([^)]+\\)\\//g, "");
   cleaned = cleaned.replace(/\\[(\\w+)\\]/g, ":$1");
   if (cleaned === "index") cleaned = "";
+  return cleaned === "" ? "/" : \`/\${cleaned}\`;
+}
 
-  const routePath = cleaned === "" ? "/" : \`/\${cleaned}\`;
+const pageEntries = Object.entries(pages).filter(
+  ([filePath]) => !filePath.endsWith("/layout.tsx")
+);
+
+const routes = pageEntries.map(([filePath, component]) => {
+  const routePath = toRoutePath(filePath);
   const Component = lazy(component);
+  const Layout = getLayoutForPath(filePath);
+
+  console.log("[revine] route:", routePath, "| layout:", Layout ? "yes" : "none");
+
+  const pageElement = createElement(
+    Suspense,
+    { fallback: createElement("div", null, "Loading\u2026") },
+    createElement(Component)
+  );
 
   return {
     path: routePath,
-    element: createElement(
-      Suspense,
-      { fallback: createElement("div", null, "Loading\u2026") },
-      createElement(Component)
-    ),
+    element: Layout
+      ? createElement(Layout, null, pageElement)
+      : pageElement,
   };
 });
 
-// 404 fallback
 routes.push({
   path: "*",
   element: NotFoundComponent
@@ -65,7 +103,7 @@ routes.push({
 
 export const router = createBrowserRouter(routes);
 `;
-      }
+  }
     },
   };
 }
