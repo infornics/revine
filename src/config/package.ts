@@ -7,11 +7,16 @@ interface UpdatePackageOptions {
 export async function updatePackageJson(
   filePath: string,
   projectName: string,
-  options: UpdatePackageOptions = {}
+  options: UpdatePackageOptions = {},
 ) {
   const packageJson = await fs.readJson(filePath);
   packageJson.name = projectName;
   packageJson.type = "module";
+  packageJson.dependencies = {
+    ...packageJson.dependencies,
+    revine: "latest",
+  };
+
   if (options.useTailwind) {
     packageJson.devDependencies = {
       ...packageJson.devDependencies,

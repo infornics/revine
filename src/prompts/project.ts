@@ -1,10 +1,11 @@
 import inquirer from "inquirer";
-import { execSync } from "child_process";
+import { spawn } from "child_process";
 import { logInfo } from "../utils/logger.js";
 
 /**
  * Ask the user if they want to run the project after setup is complete.
- * If the user confirms, it will run `npm run dev` or the equivalent command.
+ * If the user confirms, it will start the dev server using the same revine
+ * binary that was invoked (i.e. the local build), rather than the npm package.
  * @param projectDir - The directory where the project was set up.
  */
 export default async function runProject(projectDir: string) {
@@ -20,12 +21,14 @@ export default async function runProject(projectDir: string) {
   if (runProject) {
     logInfo("Running your Revine project on dev server...");
 
-    try {
-      execSync("npm run dev", { cwd: projectDir, stdio: "inherit" });
-    } catch (error) {
-      logInfo(
-        "Failed to start the project. You can manually run `npm run dev`."
-      );
-    }
+    // Use the same revine binary that the user invoked (process.argv[1])
+    // so that local development always uses the local build.
+    const revineBin = process.argv[1];
+
+    spawn("node", [revineBin, "dev"], {
+      cwd: projectDir,
+      stdio: "inherit",
+      shell: false,
+    });
   }
 }

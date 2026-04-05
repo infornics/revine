@@ -1,7 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
-import { router } from "../.revine/routing/fileBased";
+import { router } from "revine/routing";
 import "./styles/global.css";
 
 const container = document.getElementById("root")!;

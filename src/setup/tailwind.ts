@@ -6,18 +6,6 @@ import { logInfo } from "../utils/logger.js";
 export async function setupTailwind(projectDir: string) {
   logInfo("\nSetting up Tailwind CSS...");
 
-  // Point to the hidden Vite config
-  const viteConfigPath = path.join(
-    projectDir,
-    ".revine",
-    "bundler",
-    "defaults",
-    "vite.ts"
-  );
-
-  // Use existing updateViteConfig logic on this new path
-  await updateViteConfig(viteConfigPath);
-
   // Write the Tailwind CSS import into the existing global.css file
   const cssFile = path.join(projectDir, "src", "styles", "global.css");
   const cssFileContent = `@import 'tailwindcss';\n`;

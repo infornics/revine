@@ -1,24 +1,21 @@
 {
   "name": "{{project-name}}",
   "version": "0.1.0",
+  "type": "module",
   "scripts": {
-    "dev": "vite --config .revine/bundler/vite.config.ts",
-    "build": "vite build --config .revine/bundler/vite.config.ts",
-    "preview": "vite preview --config .revine/bundler/vite.config.ts"
+    "dev": "revine dev",
+    "build": "revine build",
+    "preview": "revine preview"
   },
   "dependencies": {
+    "revine": "latest",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.22.3",
-    "chalk": "^5.4.1"
+    "react-router-dom": "^6.22.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.12",
-    "@vitejs/plugin-react": "^4.2.1",
-    "lodash-es": "^4.17.21",
-    "@types/lodash-es": "^4.17.9"
+    "typescript": "^5.3.3"
   }
 }

@@ -1,8 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
 import { lazy, Suspense, ComponentType } from "react";
-import NotFound from "../../src/NotFound";
+// @ts-ignore
+import NotFound from "/src/NotFound";
 
-const pages = import.meta.glob("../../src/pages/**/*.tsx");
+// @ts-ignore
+const pages = import.meta.glob("/src/pages/**/*.tsx");
 
 const routes = Object.entries(pages).map(([filePath, component]) => {
   let cleaned = filePath.replace(/\\/g, "/");
