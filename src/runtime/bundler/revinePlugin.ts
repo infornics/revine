@@ -1,13 +1,5 @@
 const VIRTUAL_ROUTING_ID = "\0revine:routing";
 
-/**
- * The Revine Vite plugin.
- *
- * Provides a virtual module for `revine/routing` so that:
- *  - `import.meta.glob` is resolved by Vite in the *project* context (not node_modules)
- *  - React runtime is resolved from the project's own node_modules
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function revinePlugin(): any {
   return {
     name: "revine",
@@ -18,12 +10,9 @@ export function revinePlugin(): any {
       }
     },
 
-    // Return the routing source as a virtual module.
-    // Because it's virtual (not inside node_modules), Vite processes
-    // import.meta.glob and all imports normally in the project context.
     load(id: string) {
-  if (id === VIRTUAL_ROUTING_ID) {
-    return `
+      if (id === VIRTUAL_ROUTING_ID) {
+        return `
 import { createBrowserRouter } from "react-router-dom";
 import { lazy, Suspense, createElement } from "react";
 
@@ -31,31 +20,36 @@ const notFoundModules = import.meta.glob("/src/NotFound.tsx", { eager: true });
 const NotFoundComponent = Object.values(notFoundModules)[0]?.default;
 
 const pages = import.meta.glob("/src/pages/**/*.tsx");
-
-// Static literal array — Vite requires this to be a static string, not dynamic
 const layoutModules = import.meta.glob("/src/pages/**/layout.tsx", { eager: true });
 
-// Debug — remove after confirming it works
-console.log("[revine] layoutModules found:", Object.keys(layoutModules));
-console.log("[revine] pages found:", Object.keys(pages));
-
-function getLayoutForPath(filePath) {
-  // Walk up directories looking for a layout.tsx
-  // e.g. /src/pages/about/index.tsx → check /src/pages/about/layout.tsx
-  //                                 → then /src/pages/layout.tsx
+// Collect ALL layouts from root down to the page's directory
+// e.g. /src/pages/about/team/index.tsx
+//   → [/src/pages/layout.tsx, /src/pages/about/layout.tsx, /src/pages/about/team/layout.tsx]
+function getLayoutsForPath(filePath) {
   const parts = filePath.split("/");
-  
-  // Remove the filename, keep the directory parts
-  parts.pop();
-  
-  while (parts.length >= 2) {
-    const layoutKey = parts.join("/") + "/layout.tsx";
+  parts.pop(); // remove filename
+
+  const layouts = [];
+  const accumulated = [];
+
+  for (const part of parts) {
+    accumulated.push(part);
+    const layoutKey = accumulated.join("/") + "/layout.tsx";
     if (layoutModules[layoutKey]?.default) {
-      return layoutModules[layoutKey].default;
+      layouts.push(layoutModules[layoutKey].default);
     }
-    parts.pop();
   }
-  return null;
+
+  return layouts; // ordered outermost → innermost
+}
+
+// Wrap element in layouts from innermost to outermost
+// layouts = [RootLayout, AboutLayout] → RootLayout > AboutLayout > page
+function wrapWithLayouts(element, layouts) {
+  // wrap from right to left so outermost is the final outer wrapper
+  return layouts.reduceRight((wrapped, Layout) => {
+    return createElement(Layout, null, wrapped);
+  }, element);
 }
 
 function toRoutePath(filePath) {
@@ -76,9 +70,7 @@ const pageEntries = Object.entries(pages).filter(
 const routes = pageEntries.map(([filePath, component]) => {
   const routePath = toRoutePath(filePath);
   const Component = lazy(component);
-  const Layout = getLayoutForPath(filePath);
-
-  console.log("[revine] route:", routePath, "| layout:", Layout ? "yes" : "none");
+  const layouts = getLayoutsForPath(filePath);
 
   const pageElement = createElement(
     Suspense,
@@ -88,8 +80,8 @@ const routes = pageEntries.map(([filePath, component]) => {
 
   return {
     path: routePath,
-    element: Layout
-      ? createElement(Layout, null, pageElement)
+    element: layouts.length > 0
+      ? wrapWithLayouts(pageElement, layouts)
       : pageElement,
   };
 });
@@ -103,7 +95,7 @@ routes.push({
 
 export const router = createBrowserRouter(routes);
 `;
-  }
+      }
     },
   };
 }
