@@ -99,16 +99,3 @@ program
   .action(() => runViteCommand("preview"));
 
 program.parse(process.argv);
-
-export { defineConfig } from "./runtime/defineConfig.js";
-export {
-  Link,
-  NavLink,
-  useParams,
-  useNavigate,
-  useLocation,
-  useSearchParams,
-  Outlet,
-} from "react-router-dom";
-export type { LinkProps, NavLinkProps } from "react-router-dom";
-export type { LayoutProps } from "./runtime/types.js";

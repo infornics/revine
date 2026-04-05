@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { RouterProvider } from "react-router-dom";
+import { RouterProvider } from "revine";
 import { router } from "revine/routing";
 import "./styles/global.css";
 

@@ -3,6 +3,7 @@ const VIRTUAL_ROUTING_ID = "\0revine:routing";
 export function revinePlugin(): any {
   return {
     name: "revine",
+    enforce: "pre",
 
     resolveId(id: string) {
       if (id === "revine/routing") {

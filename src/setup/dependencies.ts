@@ -8,7 +8,7 @@ export async function installDependencies(projectDir: string): Promise<void> {
   const installResult = spawnSync(npmCmd, ["install"], {
     stdio: "inherit",
     cwd: projectDir,
-    shell: true,
+    shell: false,
   });
   if (installResult.error || installResult.status !== 0) {
     logError("Error installing dependencies:", installResult.error);

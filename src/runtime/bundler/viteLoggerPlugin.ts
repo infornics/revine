@@ -1,5 +1,5 @@
-import type { Plugin, ViteDevServer } from "vite";
 import chalk from "chalk";
+import type { Plugin, ViteDevServer } from "vite";
 
 export function revineLoggerPlugin(): Plugin {
   //  custom chalk instance pointing to the indigo color
@@ -10,14 +10,15 @@ export function revineLoggerPlugin(): Plugin {
     configureServer(server: ViteDevServer) {
       server.httpServer?.once("listening", () => {
         const protocol = server.config.server.https ? "https" : "http";
-        const host = server.resolvedUrls?.local[0] || "localhost:3000";
+        const localUrl =
+          server.resolvedUrls?.local[0] || `http://localhost:3000`;
         const { network = [] } = server.resolvedUrls ?? {};
 
         // Use the 'indigo' instance in place of 'chalk.cyan'
         console.log(indigo("─────────────────────────────────────────────"));
         console.log(indigo.bold("🚀 Revine Dev Server is now running!"));
         console.log(indigo("─────────────────────────────────────────────"));
-        console.log(indigo(`Local:   ${chalk.green(`${protocol}://${host}`)}`));
+        console.log(indigo(`Local:   ${chalk.green(localUrl)}`));
 
         if (network.length) {
           network.forEach((url: string) => {

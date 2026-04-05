@@ -58,7 +58,7 @@ src/pages/blog/[slug].tsx → /blog/:slug
 ### Clone repository
 
 ```bash
-git clone https://github.com/your-username/revine.git
+git clone [https://github.com/your-username/revine.git](https://github.com/rachit-bharadwaj/revine)
 ```
 
 ### Install dependencies

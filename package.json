@@ -9,30 +9,17 @@
   "bin": {
     "revine": "dist/index.js"
   },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./routing": {
-      "import": "./dist/runtime/routing/fileBased.js",
-      "types": "./dist/runtime/routing/fileBased.d.ts"
-    },
-    "./bundler/*": {
-      "import": "./dist/runtime/bundler/*.js",
-      "types": "./dist/runtime/bundler/*.d.ts"
-    }
+"exports": {
+  ".": {
+    "import": "./dist/client.js",
+    "types": "./dist/client.d.ts"
   },
-  "typesVersions": {
-    "*": {
-      "routing": [
-        "./dist/runtime/routing/fileBased.d.ts"
-      ],
-      "bundler/*": [
-        "./dist/runtime/bundler/*.d.ts"
-      ]
-    }
-  },
+  "./routing": {
+    "import": "./dist/runtime/routing.js",
+    "types": "./dist/runtime/routing.d.ts"
+  }
+},
+  "typesVersions": {},
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
@@ -42,7 +29,6 @@
     "@vitejs/plugin-react": "^4.2.1",
     "chalk": "^5.4.1",
     "commander": "^13.1.0",
-    "cross-spawn": "^7.0.6",
     "fs-extra": "^11.3.0",
     "inquirer": "^12.4.1",
     "lodash-es": "^4.17.21",
