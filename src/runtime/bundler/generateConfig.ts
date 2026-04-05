@@ -18,7 +18,7 @@ interface UserConfig {
  * All other variables are ignored for safety.
  */
 function buildProcessEnvDefines(cwd: string): Record<string, string> {
-  const defines: Record<string, string> = [];
+  const defines: Record<string, string> = {};
 
   // Load .env, .env.local, .env.development / .env.production in priority order
   const envFiles = [
