@@ -15,4 +15,6 @@ export type { NavLinkProps } from "./components/NavLink.js";
 export { useRouter } from "./hooks/useRouter.js";
 export { defineConfig } from "./runtime/defineConfig.js";
 export { env, envAll } from "./runtime/env.js";
+export { middlewareResponse } from "./runtime/middleware.js";
+export type { MiddlewareConfig, MiddlewareFn, MiddlewareRequest, MiddlewareResponse } from "./runtime/middleware.js";
 export type { LayoutProps } from "./runtime/types.js";

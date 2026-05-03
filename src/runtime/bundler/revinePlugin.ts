@@ -380,11 +380,50 @@ export function revinePlugin(): any {
     load(id: string) {
       if (id === VIRTUAL_ROUTING_ID) {
         return `
-import { createBrowserRouter, useRouteError } from "react-router-dom";
-import { lazy, Suspense, createElement } from "react";
+import { createBrowserRouter, useRouteError, Outlet } from "react-router-dom";
+import { lazy, Suspense, createElement, useState, useEffect, useRef } from "react";
 import React from "react";
 
+// ── Middleware support ──────────────────────────────────────────────
+const middlewareModules = import.meta.glob("/src/middleware.{ts,tsx}", { eager: true });
+const middlewareMod = Object.values(middlewareModules)[0];
+const userMiddleware = middlewareMod?.default ?? null;
+
 ${errorBoundaryComponent}
+
+// ── MiddlewareGuard ─────────────────────────────────────────────────
+function MiddlewareGuard({ children }) {
+  const [status, setStatus] = React.useState("pending");
+  const lastPathnameRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!userMiddleware) { setStatus("allowed"); return; }
+
+    const run = async (pathname, search) => {
+      if (pathname === lastPathnameRef.current) return;
+      lastPathnameRef.current = pathname;
+
+      setStatus("pending");
+      const req = { pathname, searchParams: new URLSearchParams(search) };
+      const res = await Promise.resolve(userMiddleware(req));
+      if (res.type === "redirect") {
+        router.navigate(res.destination, { replace: true });
+        setStatus("redirecting");
+      } else {
+        setStatus("allowed");
+      }
+    };
+
+    run(window.location.pathname, window.location.search);
+
+    return router.subscribe((state) => {
+      run(state.location.pathname, state.location.search);
+    });
+  }, []);
+
+  if (status === "pending" || status === "redirecting") return null;
+  return React.createElement(React.Fragment, null, children);
+}
 
 const notFoundModules = import.meta.glob("/src/NotFound.tsx", { eager: true });
 const NotFoundComponent = Object.values(notFoundModules)[0]?.default;
@@ -445,7 +484,7 @@ const pageEntries = Object.entries(pages).filter(([filePath]) => {
   return !segments.some((s) => s.startsWith("_"));
 });
 
-const routes = pageEntries.map(([filePath, component]) => {
+const innerRoutes = pageEntries.map(([filePath, component]) => {
   const routePath = toRoutePath(filePath);
   const Component = lazy(component);
   const layouts = getLayoutsForPath(filePath);
@@ -468,13 +507,21 @@ const routes = pageEntries.map(([filePath, component]) => {
   };
 });
 
-routes.push({
+innerRoutes.push({
   path: "*",
   element: NotFoundComponent
     ? createElement(NotFoundComponent)
     : createElement("div", null, "404 - Page Not Found"),
   errorElement: createElement(RevineErrorDialog),
 });
+
+const routes = [
+  {
+    element: createElement(MiddlewareGuard, null, createElement(Outlet)),
+    children: innerRoutes,
+    errorElement: createElement(RevineErrorDialog),
+  },
+];
 
 export const router = createBrowserRouter(routes, {
   future: {
