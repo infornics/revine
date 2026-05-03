@@ -12,3 +12,6 @@
 ## Rendering
 - add SSG, SSR, ISR, and CSR rendering
 - add a way to configure rendering for each file or component or even function
+
+## Image
+- add default declaration for image files (.png, .jpg, .jpeg, .gif, .svg, .webp etc)
