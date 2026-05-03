@@ -18,3 +18,8 @@
 
 ## File Imports
 - add support for alias imports for public folder
+
+## Styling
+- add shadcn support
+- add font support ( google fonts)
+- add theme support with tailwind
