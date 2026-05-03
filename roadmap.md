@@ -15,3 +15,6 @@
 
 ## Image
 - add default declaration for image files (.png, .jpg, .jpeg, .gif, .svg, .webp etc)
+
+## File Imports
+- add support for alias imports for public folder
