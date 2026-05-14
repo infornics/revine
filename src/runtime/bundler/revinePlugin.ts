@@ -1,6 +1,103 @@
 const VIRTUAL_ROUTING_ID = "\0revine:routing";
 
 const errorBoundaryComponent = `
+const overlayStyle = {
+  position: "fixed", inset: 0,
+  background: "rgba(0,0,0,0.72)",
+  backdropFilter: "blur(6px)",
+  display: "flex", alignItems: "center", justifyContent: "center",
+  zIndex: 9999,
+};
+const dialogStyle = {
+  background: "#141414",
+  border: "1px solid #2a2a2a",
+  borderRadius: "14px",
+  padding: "0",
+  maxWidth: "580px", width: "92%",
+  boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset",
+  color: "#e5e5e5",
+  overflow: "hidden",
+  fontFamily: "system-ui, -apple-system, sans-serif",
+};
+const topBarStyle = {
+  display: "flex", alignItems: "center", justifyContent: "space-between",
+  padding: "12px 18px", background: "#0e0e0e",
+};
+const brandStyle = { display: "flex", alignItems: "center", gap: "7px" };
+const brandNameStyle = {
+  fontSize: "13px", fontWeight: 700,
+  color: "#c4b5fd", letterSpacing: "0.04em",
+  fontFamily: "system-ui, sans-serif",
+};
+const badgeStyle = {
+  fontSize: "11px", fontWeight: 600, color: "#f87171",
+  background: "rgba(248,113,113,0.1)",
+  border: "1px solid rgba(248,113,113,0.2)",
+  borderRadius: "999px", padding: "2px 10px", letterSpacing: "0.03em",
+};
+const dividerStyle = { height: "1px", background: "#1f1f1f" };
+const headerStyle = {
+  display: "flex", alignItems: "center", gap: "10px",
+  padding: "20px 22px 0 22px",
+};
+const iconWrapStyle = {
+  width: "28px", height: "28px", borderRadius: "8px",
+  background: "rgba(248,113,113,0.1)",
+  border: "1px solid rgba(248,113,113,0.15)",
+  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+};
+const titleStyle = { fontSize: "15px", fontWeight: 650, color: "#fff", letterSpacing: "-0.01em" };
+const messagePanelStyle = {
+  position: "relative", margin: "14px 22px 0 22px",
+  background: "rgba(248,113,113,0.05)",
+  border: "1px solid rgba(248,113,113,0.12)",
+  borderRadius: "8px", padding: "12px 40px 12px 14px",
+};
+const messageStyle = {
+  fontFamily: "ui-monospace, 'Cascadia Code', 'Fira Code', monospace",
+  fontSize: "12.5px", color: "#fca5a5",
+  margin: 0, lineHeight: 1.65, wordBreak: "break-word",
+};
+const copyBtnStyle = {
+  position: "absolute", top: "10px", right: "10px",
+  background: "rgba(255,255,255,0.05)", border: "1px solid #2e2e2e",
+  borderRadius: "6px", width: "28px", height: "28px",
+  display: "flex", alignItems: "center", justifyContent: "center",
+  cursor: "pointer", transition: "background 150ms ease", flexShrink: 0,
+};
+const stackSectionStyle = { margin: "14px 22px 0 22px" };
+const toggleBtnStyle = {
+  background: "none", border: "none", cursor: "pointer",
+  color: "#666", fontSize: "12px", padding: "4px 0",
+  display: "flex", alignItems: "center", gap: "6px",
+  letterSpacing: "0.02em", transition: "color 150ms ease",
+};
+const stackStyle = {
+  background: "#0a0a0a", border: "1px solid #222", borderRadius: "8px",
+  padding: "14px 16px", fontSize: "11px", color: "#888",
+  overflowX: "auto", lineHeight: 1.8, marginTop: "8px", marginBottom: 0,
+  whiteSpace: "pre-wrap", wordBreak: "break-all",
+  fontFamily: "ui-monospace, 'Cascadia Code', monospace",
+};
+const actionsStyle = {
+  display: "flex", gap: "10px", padding: "18px 22px 22px 22px", marginTop: "16px",
+};
+const primaryBtnStyle = {
+  flex: 1, padding: "10px 0", borderRadius: "8px", border: "none",
+  background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+  color: "#fff", fontWeight: 600, fontSize: "13px", cursor: "pointer",
+  display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
+  letterSpacing: "0.01em", boxShadow: "0 2px 12px rgba(124,58,237,0.35)",
+  fontFamily: "system-ui, sans-serif",
+};
+const secondaryBtnStyle = {
+  flex: 1, padding: "10px 0", borderRadius: "8px",
+  border: "1px solid #2e2e2e", background: "rgba(255,255,255,0.03)",
+  color: "#999", fontSize: "13px", cursor: "pointer",
+  display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
+  letterSpacing: "0.01em", fontFamily: "system-ui, sans-serif",
+};
+
 function RevineErrorDialog() {
   const error = useRouteError();
   const [expanded, setExpanded] = React.useState(false);
@@ -143,104 +240,7 @@ function RevineErrorDialog() {
     )
   );
 }
-
-const overlayStyle = {
-  position: "fixed", inset: 0,
-  background: "rgba(0,0,0,0.72)",
-  backdropFilter: "blur(6px)",
-  display: "flex", alignItems: "center", justifyContent: "center",
-  zIndex: 9999,
-};
-const dialogStyle = {
-  background: "#141414",
-  border: "1px solid #2a2a2a",
-  borderRadius: "14px",
-  padding: "0",
-  maxWidth: "580px", width: "92%",
-  boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset",
-  color: "#e5e5e5",
-  overflow: "hidden",
-  fontFamily: "system-ui, -apple-system, sans-serif",
-};
-const topBarStyle = {
-  display: "flex", alignItems: "center", justifyContent: "space-between",
-  padding: "12px 18px", background: "#0e0e0e",
-};
-const brandStyle = { display: "flex", alignItems: "center", gap: "7px" };
-const brandNameStyle = {
-  fontSize: "13px", fontWeight: 700,
-  color: "#c4b5fd", letterSpacing: "0.04em",
-  fontFamily: "system-ui, sans-serif",
-};
-const badgeStyle = {
-  fontSize: "11px", fontWeight: 600, color: "#f87171",
-  background: "rgba(248,113,113,0.1)",
-  border: "1px solid rgba(248,113,113,0.2)",
-  borderRadius: "999px", padding: "2px 10px", letterSpacing: "0.03em",
-};
-const dividerStyle = { height: "1px", background: "#1f1f1f" };
-const headerStyle = {
-  display: "flex", alignItems: "center", gap: "10px",
-  padding: "20px 22px 0 22px",
-};
-const iconWrapStyle = {
-  width: "28px", height: "28px", borderRadius: "8px",
-  background: "rgba(248,113,113,0.1)",
-  border: "1px solid rgba(248,113,113,0.15)",
-  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-};
-const titleStyle = { fontSize: "15px", fontWeight: 650, color: "#fff", letterSpacing: "-0.01em" };
-const messagePanelStyle = {
-  position: "relative", margin: "14px 22px 0 22px",
-  background: "rgba(248,113,113,0.05)",
-  border: "1px solid rgba(248,113,113,0.12)",
-  borderRadius: "8px", padding: "12px 40px 12px 14px",
-};
-const messageStyle = {
-  fontFamily: "ui-monospace, 'Cascadia Code', 'Fira Code', monospace",
-  fontSize: "12.5px", color: "#fca5a5",
-  margin: 0, lineHeight: 1.65, wordBreak: "break-word",
-};
-const copyBtnStyle = {
-  position: "absolute", top: "10px", right: "10px",
-  background: "rgba(255,255,255,0.05)", border: "1px solid #2e2e2e",
-  borderRadius: "6px", width: "28px", height: "28px",
-  display: "flex", alignItems: "center", justifyContent: "center",
-  cursor: "pointer", transition: "background 150ms ease", flexShrink: 0,
-};
-const stackSectionStyle = { margin: "14px 22px 0 22px" };
-const toggleBtnStyle = {
-  background: "none", border: "none", cursor: "pointer",
-  color: "#666", fontSize: "12px", padding: "4px 0",
-  display: "flex", alignItems: "center", gap: "6px",
-  letterSpacing: "0.02em", transition: "color 150ms ease",
-};
-const stackStyle = {
-  background: "#0a0a0a", border: "1px solid #222", borderRadius: "8px",
-  padding: "14px 16px", fontSize: "11px", color: "#888",
-  overflowX: "auto", lineHeight: 1.8, marginTop: "8px", marginBottom: 0,
-  whiteSpace: "pre-wrap", wordBreak: "break-all",
-  fontFamily: "ui-monospace, 'Cascadia Code', monospace",
-};
-const actionsStyle = {
-  display: "flex", gap: "10px", padding: "18px 22px 22px 22px", marginTop: "16px",
-};
-const primaryBtnStyle = {
-  flex: 1, padding: "10px 0", borderRadius: "8px", border: "none",
-  background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
-  color: "#fff", fontWeight: 600, fontSize: "13px", cursor: "pointer",
-  display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
-  letterSpacing: "0.01em", boxShadow: "0 2px 12px rgba(124,58,237,0.35)",
-  fontFamily: "system-ui, sans-serif",
-};
-const secondaryBtnStyle = {
-  flex: 1, padding: "10px 0", borderRadius: "8px",
-  border: "1px solid #2e2e2e", background: "rgba(255,255,255,0.03)",
-  color: "#999", fontSize: "13px", cursor: "pointer",
-  display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
-  letterSpacing: "0.01em", fontFamily: "system-ui, sans-serif",
-};
-`;
+`;;
 
 // ── Shared overlay HTML builder (used in both the inline script and module error handler)
 // Written as a plain JS string so it can be embedded inside the injected <script> tag.
@@ -468,11 +468,18 @@ function wrapWithLayouts(element, layouts) {
 
 function toRoutePath(filePath) {
   let p = filePath;
-  p = p.replace(/\\\\/g, "/");
+  p = p.replace(/\\\\\\\\/g, "/");
   p = p.replace(/.*\\/pages\\//, "");
   p = p.replace(/\\.tsx$/i, "");
   p = p.replace(/\\([^)]+\\)\\//g, "");
   p = p.replace(/\\/index$/, "");
+
+  // Handle dynamic routes: [param] -> :param
+  p = p.replace(/\\[([^ \\]]+)\\]/g, (_match, param) => {
+    if (param.startsWith("...")) return "*";
+    return ":" + param;
+  });
+
   if (p === "index" || p === "") return "/";
   return "/" + p;
 }
