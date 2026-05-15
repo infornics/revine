@@ -23,3 +23,6 @@
 - add shadcn support
 - add font support ( google fonts)
 - add theme support with tailwind
+
+## API calling
+- caching the server response
