@@ -4,6 +4,8 @@ import { readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createProject } from "./commands/createProject.js";
+import { printDevServerInfo, logStep, logSuccess } from "./utils/logger.js";
+import chalk from "chalk";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,23 +42,31 @@ const runViteCommand = async (command: string) => {
   const config = await generateRevineViteConfig();
 
   if (command === "dev") {
+    const startTime = Date.now();
     const server = await vite.createServer({
       ...config,
       configFile: false, // we pass config directly, no file needed
     });
     await server.listen();
-    server.printUrls();
+    const port = server.config.server.port || 3000;
+    printDevServerInfo(pkg.version, port, startTime);
   } else if (command === "build") {
+    const startTime = Date.now();
+    logStep("Building project for production...");
     await vite.build({
       ...config,
       configFile: false,
     });
+    const duration = Date.now() - startTime;
+    logSuccess(`Build completed in ${chalk.bold(duration)}ms`);
   } else if (command === "preview") {
+    const startTime = Date.now();
     const server = await vite.preview({
       ...config,
       configFile: false,
     });
-    server.printUrls();
+    const port = server.config.preview.port || 3000;
+    printDevServerInfo(pkg.version, port, startTime);
   }
 };
 

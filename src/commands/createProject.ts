@@ -7,7 +7,9 @@ import { askForTailwindSetup, initGit, runProject } from "../prompts/index.js";
 import { installDependencies } from "../setup/dependencies.js";
 import { setupTailwind } from "../setup/tailwind.js";
 import { copyTemplate } from "../utils/file.js";
-import { logError, logInfo } from "../utils/logger.js";
+import { logError, logInfo, logStep, logSuccess } from "../utils/logger.js";
+import boxen from "boxen";
+import chalk from "chalk";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -62,7 +64,7 @@ export async function createProject(
   const isCurrentDir = [".", "./"].includes(projectName);
 
   try {
-    logInfo(`Creating project in ${projectDir}...`);
+    logStep(`Creating project in ${chalk.cyan(projectDir)}...`);
 
     // Ensure the project directory exists
     await fs.ensureDir(projectDir);
@@ -109,18 +111,33 @@ export async function createProject(
     await updateReadme(readmePath, finalProjectName);
 
     // Install dependencies
-    logInfo("\nInstalling dependencies...");
+    logStep("Installing dependencies...");
     await installDependencies(projectDir);
 
     // If Tailwind is selected, set it up
     if (useTailwind) {
+      logStep("Setting up Tailwind CSS...");
       await setupTailwind(projectDir);
     }
 
-    logInfo(`\nSuccess! Created project at ${projectDir}`);
-    logInfo("\nStart developing with:");
-    if (!isCurrentDir) console.log(`  cd ${projectName}`);
-    console.log("  npm run dev\n");
+    logSuccess(`Project created at ${chalk.cyan(projectDir)}`);
+
+    const successContent = [
+      `${chalk.bold.green("Success!")} Your Revine project is ready.`,
+      "",
+      `${chalk.white("Next steps:")}`,
+      !isCurrentDir ? `${chalk.dim("1.")} ${chalk.cyan(`cd ${projectName}`)}` : "",
+      `${isCurrentDir ? chalk.dim("1.") : chalk.dim("2.")} ${chalk.cyan("npm run dev")}`,
+      "",
+      `${chalk.dim("Happy coding!")}`
+    ].filter(Boolean).join("\n");
+
+    console.log(boxen(successContent, {
+      padding: 1,
+      margin: { top: 1, bottom: 1, left: 0, right: 0 },
+      borderStyle: "round",
+      borderColor: "green",
+    }));
 
     // Check if Git exists and initialize repository if user agrees
     await initGit(projectDir);
