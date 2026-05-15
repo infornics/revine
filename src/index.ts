@@ -4,7 +4,7 @@ import { readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createProject } from "./commands/createProject.js";
-import { printDevServerInfo, logStep, logSuccess } from "./utils/logger.js";
+import { printDevServerInfo, logStep, logSuccess, logBrand } from "./utils/logger.js";
 import chalk from "chalk";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -107,5 +107,7 @@ program
   .command("preview")
   .description("Preview the production build")
   .action(() => runViteCommand("preview"));
+
+logBrand();
 
 program.parse(process.argv);

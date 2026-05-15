@@ -7,7 +7,7 @@ import { askForTailwindSetup, initGit, runProject } from "../prompts/index.js";
 import { installDependencies } from "../setup/dependencies.js";
 import { setupTailwind } from "../setup/tailwind.js";
 import { copyTemplate } from "../utils/file.js";
-import { logError, logInfo, logStep, logSuccess } from "../utils/logger.js";
+import { logError, logInfo, logStep, logSuccess, getLogo } from "../utils/logger.js";
 import boxen from "boxen";
 import chalk from "chalk";
 
@@ -123,6 +123,8 @@ export async function createProject(
     logSuccess(`Project created at ${chalk.cyan(projectDir)}`);
 
     const successContent = [
+      getLogo(),
+      "",
       `${chalk.bold.green("Success!")} Your Revine project is ready.`,
       "",
       `${chalk.white("Next steps:")}`,

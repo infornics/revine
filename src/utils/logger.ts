@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import boxen from "boxen";
 import os from "os";
+import gradient from "gradient-string";
 
 export function logInfo(message: string) {
   console.log(chalk.cyan(message));
@@ -10,8 +11,24 @@ export function logError(message: string, error?: any) {
   console.error(chalk.red(message), error || "");
 }
 
+const revineGradient = gradient(["#7c3aed", "#a78bfa", "#f472b6"]);
+
+export function logBrand() {
+  console.log(chalk.bold(revineGradient("\n  ◆ REVINE\n")));
+}
+
+export function getLogo() {
+  return chalk.bold(revineGradient.multiline([
+    "  ____  _______   _____ _   _  _____ ",
+    " |  _ \\| ____\\ \\ / /_ _| \\ | || ____|",
+    " | |_) |  _|  \\ V / | ||  \\| ||  _|  ",
+    " |  _ <| |___  \\ /  | || |\\  || |___ ",
+    " |_| \\_\\_____|  \\_/ |___|_| \\_||_____|"
+  ].join("\n")));
+}
+
 export function logStep(message: string) {
-  console.log(`${chalk.cyan("⚡")} ${message}`);
+  console.log(`${revineGradient("⚡")} ${message}`);
 }
 
 export function logSuccess(message: string) {
@@ -36,11 +53,15 @@ export function printDevServerInfo(version: string, port: number, startTime: num
     }
   }
 
+  const logo = getLogo();
+
   const content = [
-    `${chalk.bold.cyan("REVINE")} ${chalk.dim(`v${version}`)}`,
+    logo,
     "",
-    `${chalk.white("➜")}  ${chalk.bold("Local:")}   ${chalk.cyan(localUrl)}`,
-    ...networkUrls.map(url => `${chalk.white("➜")}  ${chalk.bold("Network:")} ${chalk.cyan(url)}`),
+    `${chalk.dim("Framework Version:")} ${chalk.bold.white(`v${version}`)}`,
+    "",
+    `${chalk.cyan("➜")}  ${chalk.bold("Local:")}   ${chalk.blue(localUrl)}`,
+    ...networkUrls.map(url => `${chalk.cyan("➜")}  ${chalk.bold("Network:")} ${chalk.blue(url)}`),
     "",
     `${chalk.dim("Ready in")} ${chalk.bold.white(duration)}${chalk.dim("ms")}`,
   ].join("\n");
