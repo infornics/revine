@@ -26,3 +26,6 @@
 
 ## API calling
 - caching the server response
+
+## Error Handling
+- add custom error dialog that will be universal for all types of errors, with good ui/ux
