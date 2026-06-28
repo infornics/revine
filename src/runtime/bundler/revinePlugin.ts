@@ -1,3 +1,29 @@
+import { loadUserConfig } from "./utils/loadUserConfig.js";
+
+function parseRevalidateTime(time: string | number | undefined): number | undefined {
+  if (time === undefined) return undefined;
+  if (typeof time === "number") return time;
+  const match = String(time).match(/^(\d+)([shmd])$/i);
+  if (!match) {
+    const num = parseInt(String(time), 10);
+    return isNaN(num) ? undefined : num;
+  }
+  const val = parseInt(match[1], 10);
+  const unit = match[2].toLowerCase();
+  switch (unit) {
+    case "s":
+      return val;
+    case "m":
+      return val * 60;
+    case "h":
+      return val * 3600;
+    case "d":
+      return val * 86400;
+    default:
+      return undefined;
+  }
+}
+
 const VIRTUAL_ROUTING_ID = "\0revine:routing";
 const VIRTUAL_ENTRY_SERVER_ID = "\0revine:entry-server";
 
@@ -381,7 +407,7 @@ export function revinePlugin(): any {
       return result;
     },
 
-    load(id: string) {
+    async load(id: string) {
       if (id === VIRTUAL_ENTRY_SERVER_ID) {
         return `
 import React from "react";
@@ -424,6 +450,16 @@ export async function render(url) {
 `;
       }
       if (id === VIRTUAL_ROUTING_ID) {
+        let userConfig: any = {};
+        try {
+          userConfig = await loadUserConfig();
+        } catch (e) {
+          console.error("Failed to load user config in revine plugin:", e);
+        }
+        const rendering = userConfig.rendering || {};
+        const defaultMode = rendering.default ?? "csr";
+        const defaultRevalidateSeconds = parseRevalidateTime(rendering.revalidateTime);
+
         return `
 import { createBrowserRouter, useRouteError, Outlet } from "react-router-dom";
 import { lazy, Suspense, createElement, useState, useEffect, useRef } from "react";
@@ -620,8 +656,8 @@ export function getPageMetadata() {
     metadata.push({
       filePath,
       routePath: toRoutePath(filePath),
-      mode: config.mode ?? "csr",
-      revalidate: config.revalidate,
+      mode: config.mode ?? "${defaultMode}",
+      revalidate: config.revalidate ?? ${defaultRevalidateSeconds !== undefined ? defaultRevalidateSeconds : "undefined"},
       getStaticPaths: mod.getStaticPaths,
     });
   }
