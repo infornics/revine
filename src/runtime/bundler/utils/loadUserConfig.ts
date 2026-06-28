@@ -1,18 +1,26 @@
+import { loadConfigFromFile } from "vite";
 import path from "path";
-import { pathToFileURL } from "url";
 
 export async function loadUserConfig() {
   const configPath = path.resolve(process.cwd(), "revine.config.ts");
   try {
-    const configModule = await import(pathToFileURL(configPath).href);
-    return configModule.default || {};
+    const result = await loadConfigFromFile(
+      { command: "serve", mode: "development" },
+      configPath
+    );
+    return result?.config || {};
   } catch (error) {
+    console.error("Failed loading revine.config.ts:", error);
     // If .ts fails, try .js or just return empty
     try {
       const configPathJs = path.resolve(process.cwd(), "revine.config.js");
-      const configModule = await import(pathToFileURL(configPathJs).href);
-      return configModule.default || {};
+      const result = await loadConfigFromFile(
+        { command: "serve", mode: "development" },
+        configPathJs
+      );
+      return result?.config || {};
     } catch (e) {
+      console.error("Failed loading revine.config.js:", e);
       return {};
     }
   }

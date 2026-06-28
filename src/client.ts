@@ -21,3 +21,4 @@ export { env, envAll } from "./runtime/env.js";
 export { middlewareResponse } from "./runtime/middleware.js";
 export type { MiddlewareConfig, MiddlewareFn, MiddlewareRequest, MiddlewareResponse } from "./runtime/middleware.js";
 export type { LayoutProps } from "./runtime/types.js";
+export type { RevinePageConfig, RenderMode } from "./runtime/page-config.js";

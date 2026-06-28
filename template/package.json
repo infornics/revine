@@ -4,8 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "revine dev",
+    "dev:ssr": "revine dev --ssr",
     "build": "revine build",
-    "preview": "revine preview"
+    "preview": "revine preview",
+    "export": "revine export",
+    "serve": "revine serve"
   },
   "dependencies": {
     "revine": "latest",

@@ -24,4 +24,11 @@ export const defaultViteConfig = {
     outDir: "build",
     emptyOutDir: true,
   },
+  ssr: {
+    // Ensure revine itself is bundled into the SSR output
+    // so the virtual module resolver (revinePlugin) can work
+    noExternal: ["revine"],
+    external: ["react", "react-dom"],
+  },
 };
+

@@ -4,6 +4,8 @@ import { readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createProject } from "./commands/createProject.js";
+import { runExportCommand } from "./commands/export.js";
+import { runServeCommand } from "./commands/server.js";
 import { printDevServerInfo, logStep, logSuccess, logBrand } from "./utils/logger.js";
 import chalk from "chalk";
 
@@ -22,18 +24,14 @@ const handleProjectCreation = async (
   await createProject(projectName, options);
 };
 
-const runViteCommand = async (command: string) => {
+const runViteCommand = async (command: string, options?: { ssr?: boolean }) => {
   const configPath = path.resolve(__dirname, "runtime/bundler/vite.config.js");
 
   // Set the config path as env variable — vite reads VITE_CONFIG_FILE
   process.env.VITE_CONFIG_PATH = configPath;
 
   // Dynamically import vite's programmatic API
-  const vitePath = path.resolve(
-    process.cwd(),
-    "node_modules/vite/dist/node/index.js",
-  );
-  const vite = await import(vitePath);
+  const vite = await import("vite");
 
   // Load the revine config
   const { generateRevineViteConfig } = await import(
@@ -43,20 +41,49 @@ const runViteCommand = async (command: string) => {
 
   if (command === "dev") {
     const startTime = Date.now();
-    const server = await vite.createServer({
-      ...config,
-      configFile: false, // we pass config directly, no file needed
-    });
-    await server.listen();
-    const port = server.config.server.port || 3000;
-    printDevServerInfo(pkg.version, port, startTime);
+
+    if (options?.ssr) {
+      // SSR dev mode: Vite as middleware + server-rendered responses
+      const server = await vite.createServer({
+        ...config,
+        configFile: false,
+        server: { ...config.server, middlewareMode: true },
+        appType: "custom",
+      });
+      const { createSSRDevServer } = await import("./commands/dev-ssr.js");
+      await createSSRDevServer(server, config, pkg.version, startTime);
+    } else {
+      // CSR dev mode: standard Vite dev server (current behavior)
+      const server = await vite.createServer({
+        ...config,
+        configFile: false, // we pass config directly, no file needed
+      });
+      await server.listen();
+      const port = server.config.server.port || 3000;
+      printDevServerInfo(pkg.version, port, startTime);
+    }
   } else if (command === "build") {
     const startTime = Date.now();
-    logStep("Building project for production...");
+
+    logStep("Building client bundle...");
     await vite.build({
       ...config,
       configFile: false,
     });
+
+    logStep("Building server bundle for SSR/SSG...");
+    const serverEntry = path.resolve(__dirname, "runtime/entry-server.js");
+    await vite.build({
+      ...config,
+      configFile: false,
+      build: {
+        ...(config.build || {}),
+        ssr: serverEntry,
+        outDir: "build/server",
+        emptyOutDir: true,
+      },
+    });
+
     const duration = Date.now() - startTime;
     logSuccess(`Build completed in ${chalk.bold(duration)}ms`);
   } else if (command === "preview") {
@@ -76,7 +103,7 @@ program
   .argument("[project-name/command]")
   .option("-f, --force", "Force creation in non-empty directory")
   .action(async (arg: string | undefined, options: { force?: boolean }) => {
-    const knownCommands = ["create", "dev", "build", "preview"];
+    const knownCommands = ["create", "dev", "build", "preview", "export", "serve"];
     if (arg && !knownCommands.includes(arg)) {
       await handleProjectCreation(arg, options);
     } else if (!arg) {
@@ -96,17 +123,33 @@ program
 program
   .command("dev")
   .description("Start the development server")
-  .action(() => runViteCommand("dev"));
+  .option("--ssr", "Enable SSR in development mode")
+  .action((options: { ssr?: boolean }) => runViteCommand("dev", options));
 
 program
   .command("build")
-  .description("Build the project for production")
+  .description("Build the project for production (client + server bundles)")
   .action(() => runViteCommand("build"));
 
 program
   .command("preview")
   .description("Preview the production build")
   .action(() => runViteCommand("preview"));
+
+program
+  .command("export")
+  .description("Pre-render SSG pages to static HTML")
+  .action(async () => {
+    await runExportCommand();
+  });
+
+program
+  .command("serve")
+  .description("Start the production SSR server")
+  .option("-p, --port <port>", "Port number", "3000")
+  .action(async (options: { port: string }) => {
+    await runServeCommand(parseInt(options.port));
+  });
 
 logBrand();
 

@@ -1,4 +1,5 @@
 const VIRTUAL_ROUTING_ID = "\0revine:routing";
+const VIRTUAL_ENTRY_SERVER_ID = "\0revine:entry-server";
 
 const errorBoundaryComponent = `
 const overlayStyle = {
@@ -354,6 +355,9 @@ export function revinePlugin(): any {
       if (id === "revine/routing") {
         return VIRTUAL_ROUTING_ID;
       }
+      if (id === "revine/entry-server") {
+        return VIRTUAL_ENTRY_SERVER_ID;
+      }
     },
 
     transformIndexHtml(html: string) {
@@ -378,6 +382,47 @@ export function revinePlugin(): any {
     },
 
     load(id: string) {
+      if (id === VIRTUAL_ENTRY_SERVER_ID) {
+        return `
+import React from "react";
+import ReactDOMServer from "react-dom/server";
+import {
+  createStaticHandler,
+  createStaticRouter,
+  StaticRouterProvider,
+} from "react-router-dom/server";
+import { routes, getPageMetadata } from "revine/routing";
+
+export { getPageMetadata };
+
+export async function render(url) {
+  const handler = createStaticHandler(routes);
+  const fetchRequest = new Request(url, { method: "GET" });
+  const context = await handler.query(fetchRequest);
+
+  if (context instanceof Response) {
+    return {
+      html: "",
+      statusCode: context.status,
+      headers: Object.fromEntries(context.headers.entries()),
+      redirect: context.headers.get("Location") || "/",
+    };
+  }
+
+  const router = createStaticRouter(handler.dataRoutes, context);
+  const html = ReactDOMServer.renderToString(
+    React.createElement(StaticRouterProvider, { router, context })
+  );
+
+  return {
+    html,
+    statusCode: context.statusCode ?? 200,
+    headers: {},
+    redirect: null,
+  };
+}
+`;
+      }
       if (id === VIRTUAL_ROUTING_ID) {
         return `
 import { createBrowserRouter, useRouteError, Outlet } from "react-router-dom";
@@ -393,17 +438,19 @@ ${errorBoundaryComponent}
 
 // ── MiddlewareGuard ─────────────────────────────────────────────────
 function MiddlewareGuard({ children }) {
-  const [status, setStatus] = React.useState("pending");
+  if (typeof window === "undefined") {
+    return React.createElement(React.Fragment, null, children);
+  }
+  const [status, setStatus] = React.useState("allowed");
   const lastPathnameRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (!userMiddleware) { setStatus("allowed"); return; }
+    if (!userMiddleware) return;
 
     const run = async (pathname, search) => {
       if (pathname === lastPathnameRef.current) return;
       lastPathnameRef.current = pathname;
 
-      setStatus("pending");
       const req = { pathname, searchParams: new URLSearchParams(search) };
       const res = await Promise.resolve(userMiddleware(req));
       if (res.type === "redirect") {
@@ -428,7 +475,9 @@ function MiddlewareGuard({ children }) {
 const notFoundModules = import.meta.glob("/src/NotFound.tsx", { eager: true });
 const NotFoundComponent = Object.values(notFoundModules)[0]?.default;
 
-const pages = import.meta.glob("/src/pages/**/*.tsx");
+const pages = import.meta.env.SSR
+  ? import.meta.glob("/src/pages/**/*.tsx", { eager: true })
+  : import.meta.glob("/src/pages/**/*.tsx");
 const layoutModules = import.meta.glob("/src/pages/**/layout.tsx", { eager: true });
 const loadingModules = import.meta.glob("/src/pages/**/loading.tsx", { eager: true });
 
@@ -493,7 +542,14 @@ const pageEntries = Object.entries(pages).filter(([filePath]) => {
 
 const innerRoutes = pageEntries.map(([filePath, component]) => {
   const routePath = toRoutePath(filePath);
-  const Component = lazy(component);
+
+  let PageComponent;
+  if (import.meta.env.SSR) {
+    PageComponent = component.default;
+  } else {
+    PageComponent = lazy(component);
+  }
+
   const layouts = getLayoutsForPath(filePath);
   const Loading = getLoadingForPath(filePath);
 
@@ -504,7 +560,7 @@ const innerRoutes = pageEntries.map(([filePath, component]) => {
   const pageElement = createElement(
     Suspense,
     { fallback },
-    createElement(Component)
+    createElement(PageComponent)
   );
 
   return {
@@ -522,20 +578,55 @@ innerRoutes.push({
   errorElement: createElement(RevineErrorDialog),
 });
 
-const routes = [
-  {
-    element: createElement(MiddlewareGuard, null, createElement(Outlet)),
-    children: innerRoutes,
-    errorElement: createElement(RevineErrorDialog),
-  },
-];
+// ── Route factory (shared between CSR and SSR) ────────────────────
+function createRevineRoutes() {
+  return [
+    {
+      element: createElement(MiddlewareGuard, null, createElement(Outlet)),
+      children: innerRoutes,
+      errorElement: createElement(RevineErrorDialog),
+    },
+  ];
+}
 
-export const router = createBrowserRouter(routes, {
-  future: {
-    v7_startTransition: true,
-    v7_relativeSplatPath: true,
-  },
-});
+function createBrowserRevineRouter() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  const routes = createRevineRoutes();
+  return createBrowserRouter(routes, {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    },
+  });
+}
+
+export { createRevineRoutes, createBrowserRevineRouter };
+export const routes = createRevineRoutes();
+export const router = createBrowserRevineRouter();
+
+// ── Page metadata collection (server-side only) ────────────────────
+const pageModulesEager = import.meta.glob("/src/pages/**/*.tsx", { eager: true });
+
+export function getPageMetadata() {
+  const metadata = [];
+  for (const [filePath, mod] of Object.entries(pageModulesEager)) {
+    if (filePath.endsWith("/layout.tsx") || filePath.endsWith("/loading.tsx")) continue;
+    const segments = filePath.split("/");
+    if (segments.some(s => s.startsWith("_"))) continue;
+
+    const config = mod.revine ?? {};
+    metadata.push({
+      filePath,
+      routePath: toRoutePath(filePath),
+      mode: config.mode ?? "csr",
+      revalidate: config.revalidate,
+      getStaticPaths: mod.getStaticPaths,
+    });
+  }
+  return metadata;
+}
 `;
       }
     },

@@ -17,6 +17,14 @@
     "./routing": {
       "import": "./dist/runtime/routing.js",
       "types": "./dist/runtime/routing.d.ts"
+    },
+    "./server": {
+      "import": "./dist/runtime/entry-server.js",
+      "types": "./dist/runtime/entry-server.d.ts"
+    },
+    "./page-config": {
+      "import": "./dist/runtime/page-config.js",
+      "types": "./dist/runtime/page-config.d.ts"
     }
   },
   "typesVersions": {},

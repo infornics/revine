@@ -84,10 +84,29 @@ export function Image({
 
   // If image is already cached (e.g. browser back-nav), mark loaded immediately
   useEffect(() => {
-    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
-      setLoaded(true);
+    const img = imgRef.current;
+    if (!img) return;
+
+    if (img.complete) {
+      if (img.naturalWidth > 0) {
+        setLoaded(true);
+      } else {
+        // Image is complete but naturalWidth is 0.
+        // It could be decoding or it could have failed to load.
+        if (typeof img.decode === "function") {
+          img.decode()
+            .then(() => {
+              setLoaded(true);
+            })
+            .catch(() => {
+              setErrored(true);
+            });
+        } else {
+          setLoaded(true);
+        }
+      }
     }
-  }, []);
+  }, [src]);
 
   const handleError = () => {
     setErrored(true);
