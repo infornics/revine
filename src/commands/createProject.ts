@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import fs from "fs-extra";
 import { updatePackageJson } from "../config/package.js";
 import { updateReadme } from "../config/readme.js";
-import { askForTailwindSetup, initGit, runProject } from "../prompts/index.js";
+import { askForTailwindSetup, initGit, runProject, askForRenderingMode } from "../prompts/index.js";
 import { installDependencies } from "../setup/dependencies.js";
 import { setupTailwind } from "../setup/tailwind.js";
 import { copyTemplate } from "../utils/file.js";
@@ -96,7 +96,19 @@ export async function createProject(
 
     // Update package.json with the correct details
     const useTailwind = await askForTailwindSetup();
+    const defaultMode = await askForRenderingMode();
     await updatePackageJson(packageJsonPath, finalProjectName, { useTailwind });
+
+    // Update revine.config.ts with the selected default rendering mode
+    const revineConfigPath = path.join(projectDir, "revine.config.ts");
+    if (await fs.pathExists(revineConfigPath)) {
+      let configContent = await fs.readFile(revineConfigPath, "utf-8");
+      configContent = configContent.replace(
+        /default:\s*['"]csr['"]/g,
+        `default: "${defaultMode}"`
+      );
+      await fs.writeFile(revineConfigPath, configContent, "utf-8");
+    }
 
     // Check if README exists, create it if it doesn't
     const readmePath = path.join(projectDir, "README.md");
