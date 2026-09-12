@@ -395,6 +395,13 @@ export function revinePlugin(): any {
         if ((await fs.pathExists(targetDir)) && !(await fs.pathExists(redirectsPath))) {
           await fs.writeFile(redirectsPath, "/* /index.html 200\n", "utf-8");
         }
+
+        const vercelJsonPath = path.resolve(targetDir, "vercel.json");
+        if ((await fs.pathExists(targetDir)) && !(await fs.pathExists(vercelJsonPath))) {
+          await fs.writeJson(vercelJsonPath, {
+            rewrites: [{ source: "/(.*)", destination: "/index.html" }],
+          }, { spaces: 2 });
+        }
       } catch (e) {
         // Ignore
       }
