@@ -400,12 +400,19 @@ export function revinePlugin(): any {
       }
     },
 
-    resolveId(id: string) {
+    async resolveId(id: string, importer?: string, options?: any) {
       if (id === "revine/routing") {
         return VIRTUAL_ROUTING_ID;
       }
       if (id === "revine/entry-server") {
         return VIRTUAL_ENTRY_SERVER_ID;
+      }
+      if (importer && importer.startsWith("\0revine")) {
+        const resolved = await this.resolve(id, path.resolve(process.cwd(), "package.json"), {
+          ...(options || {}),
+          skipSelf: true,
+        });
+        if (resolved) return resolved;
       }
     },
 
