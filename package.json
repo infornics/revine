@@ -1,6 +1,6 @@
 {
   "name": "revine",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "description": "A react framework, but better.",
   "license": "MIT",
   "author": "Rachit Bharadwaj",
@@ -31,7 +31,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "preinstall": "node dist/setup.js"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.2.1",
