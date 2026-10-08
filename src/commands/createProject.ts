@@ -3,9 +3,10 @@ import { fileURLToPath } from "url";
 import fs from "fs-extra";
 import { updatePackageJson } from "../config/package.js";
 import { updateReadme } from "../config/readme.js";
-import { askForTailwindSetup, initGit, runProject, askForRenderingMode } from "../prompts/index.js";
+import { askForTailwindSetup, askForShadcnSetup, initGit, runProject, askForRenderingMode } from "../prompts/index.js";
 import { installDependencies } from "../setup/dependencies.js";
 import { setupTailwind } from "../setup/tailwind.js";
+import { setupShadcn } from "../setup/shadcn.js";
 import { copyTemplate } from "../utils/file.js";
 import { logError, logInfo, logStep, logSuccess, getLogo } from "../utils/logger.js";
 import boxen from "boxen";
@@ -97,7 +98,14 @@ export async function createProject(
     // Update package.json with the correct details
     const useTailwind = await askForTailwindSetup();
     const defaultMode = await askForRenderingMode();
-    await updatePackageJson(packageJsonPath, finalProjectName, { useTailwind });
+
+    // Ask for shadcn/ui only if Tailwind is selected
+    let useShadcn = false;
+    if (useTailwind) {
+      useShadcn = await askForShadcnSetup();
+    }
+
+    await updatePackageJson(packageJsonPath, finalProjectName, { useTailwind, useShadcn });
 
     // Update revine.config.ts with the selected default rendering mode
     const revineConfigPath = path.join(projectDir, "revine.config.ts");
@@ -130,6 +138,12 @@ export async function createProject(
     if (useTailwind) {
       logStep("Setting up Tailwind CSS...");
       await setupTailwind(projectDir);
+    }
+
+    // If shadcn/ui is selected, set it up
+    if (useShadcn) {
+      logStep("Setting up shadcn/ui...");
+      await setupShadcn(projectDir);
     }
 
     logSuccess(`Project created at ${chalk.cyan(projectDir)}`);
