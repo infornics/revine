@@ -1,16 +1,22 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs-extra";
-import { updatePackageJson } from "../config/package.js";
-import { updateReadme } from "../config/readme.js";
-import { askForTailwindSetup, askForShadcnSetup, initGit, runProject, askForRenderingMode } from "../prompts/index.js";
-import { installDependencies } from "../setup/dependencies.js";
-import { setupTailwind } from "../setup/tailwind.js";
-import { setupShadcn } from "../setup/shadcn.js";
-import { copyTemplate } from "../utils/file.js";
-import { logError, logInfo, logStep, logSuccess, getLogo } from "../utils/logger.js";
 import boxen from "boxen";
 import chalk from "chalk";
+import fs from "fs-extra";
+import path from "path";
+import { fileURLToPath } from "url";
+import { updatePackageJson } from "../config/package.js";
+import { updateReadme } from "../config/readme.js";
+import {
+  askForRenderingMode,
+  askForShadcnSetup,
+  askForTailwindSetup,
+  initGit,
+  runProject,
+} from "../prompts/index.js";
+import { installDependencies } from "../setup/dependencies.js";
+import { setupShadcn } from "../setup/shadcn.js";
+import { setupTailwind } from "../setup/tailwind.js";
+import { copyTemplate } from "../utils/file.js";
+import { getLogo, logError, logStep, logSuccess } from "../utils/logger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,7 +63,7 @@ Thumbs.db
 
 export async function createProject(
   projectName: string,
-  options: { force?: boolean }
+  options: { force?: boolean },
 ) {
   // Calculate directories. This uses "../../template" for your template folder.
   const templateDir = path.join(__dirname, "../../template");
@@ -105,7 +111,10 @@ export async function createProject(
       useShadcn = await askForShadcnSetup();
     }
 
-    await updatePackageJson(packageJsonPath, finalProjectName, { useTailwind, useShadcn });
+    await updatePackageJson(packageJsonPath, finalProjectName, {
+      useTailwind,
+      useShadcn,
+    });
 
     // Update revine.config.ts with the selected default rendering mode
     const revineConfigPath = path.join(projectDir, "revine.config.ts");
@@ -113,7 +122,7 @@ export async function createProject(
       let configContent = await fs.readFile(revineConfigPath, "utf-8");
       configContent = configContent.replace(
         /default:\s*['"]csr['"]/g,
-        `default: "${defaultMode}"`
+        `default: "${defaultMode}"`,
       );
       await fs.writeFile(revineConfigPath, configContent, "utf-8");
     }
@@ -123,7 +132,7 @@ export async function createProject(
     if (!(await fs.pathExists(readmePath))) {
       await fs.writeFile(
         readmePath,
-        `# ${finalProjectName}\n\nCreated with Revine`
+        `# ${finalProjectName}\n\nCreated with Revine`,
       );
     }
 
@@ -154,18 +163,24 @@ export async function createProject(
       `${chalk.bold.green("Success!")} Your Revine project is ready.`,
       "",
       `${chalk.white("Next steps:")}`,
-      !isCurrentDir ? `${chalk.dim("1.")} ${chalk.cyan(`cd ${projectName}`)}` : "",
+      !isCurrentDir
+        ? `${chalk.dim("1.")} ${chalk.cyan(`cd ${projectName}`)}`
+        : "",
       `${isCurrentDir ? chalk.dim("1.") : chalk.dim("2.")} ${chalk.cyan("npm run dev")}`,
       "",
-      `${chalk.dim("Happy coding!")}`
-    ].filter(Boolean).join("\n");
+      `${chalk.dim("Happy coding!")}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
 
-    console.log(boxen(successContent, {
-      padding: 1,
-      margin: { top: 1, bottom: 1, left: 0, right: 0 },
-      borderStyle: "round",
-      borderColor: "green",
-    }));
+    console.log(
+      boxen(successContent, {
+        padding: 1,
+        margin: { top: 1, bottom: 1, left: 0, right: 0 },
+        borderStyle: "round",
+        borderColor: "green",
+      }),
+    );
 
     // Check if Git exists and initialize repository if user agrees
     await initGit(projectDir);
